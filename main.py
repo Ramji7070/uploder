@@ -8,8 +8,6 @@ import requests
 import subprocess
 import urllib.parse
 import yt_dlp
-
-import m3u8
 import core as helper
 from utils import progress_bar
 from vars import API_ID, API_HASH, BOT_TOKEN
