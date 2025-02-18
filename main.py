@@ -319,21 +319,30 @@ async def start(client: Client, msg: Message):
             )
         )
 
-
-@bot.on_message(filters.command(["stop"]) )
+@bot.on_message(filters.command("stop"))
 async def restart_handler(_, m):
-    await m.reply_text("⚠️𝙎𝙏𝙊𝙋𝙋𝙀𝘿🤭", True)
+    if m.from_user.id not in authorized_users:
+        await m.reply_text("Sorry, you are not eligible.")
+        return
+    await m.reply_text("**Stopped**🚦", True)
     os.execl(sys.executable, sys.executable, *sys.argv)
 
+
+# Define the drm command handler
 @bot.on_message(filters.command(["drm"]))
-async def txt_handler(bot: Client, m: Message):
-    editable = await m.reply_text(f"**🔹Send me the TXT file and wait.**")
+async def upload(bot: Client, m: Message):
+    if m.from_user.id not in authorized_users:
+        await m.reply_text("Sorry, you are not eligible.")
+        return
+
+    editable = await m.reply_text('➠ 𝐒𝐞𝐧𝐝 𝐌𝐞 𝐘𝐨𝐮𝐫 𝐓𝐗𝐓 𝐅𝐢𝐥𝐞 𝐢𝐧 𝐀 𝐏𝐫𝐨𝐩𝐞𝐫 𝐖𝐚𝐲 **\n\n**├── Bot Made By : **『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』**')
     input: Message = await bot.listen(editable.chat.id)
     x = await input.download()
     await input.delete(True)
-    file_name, ext = os.path.splitext(os.path.basename(x))
-    credit = f"ᴊᴏʜɴ✰ᴡɪᴄᴋ"
-    try:    
+
+    path = f"./downloads/{m.chat.id}"
+
+    try:
         with open(x, "r") as f:
             content = f.read()
         content = content.split("\n")
@@ -341,29 +350,28 @@ async def txt_handler(bot: Client, m: Message):
         for i in content:
             links.append(i.split("://", 1))
         os.remove(x)
+        # print(len(links))
     except:
-        await m.reply_text("Invalid file input.")
+        await m.reply_text("**Invalid file input.**")
         os.remove(x)
         return
+
+
+
+    
    
-    await editable.edit(f"Total links found are **{len(links)}**\n\nSend From where you want to download initial is **1**")
+    await editable.edit(f"**Total Number of 🔗 Links found are** **{len(links)}**\n**├─ 📽️ Video Links :**\n**├─ 📑 PDF Links :**\n**├─ 🖼️ Image Links :**\n**├─ 🔗 Other Links:**\n\n**Send From where You want to 📩 Download\n**Initial is  :** **1**\n\n **├── Bot Made By : **『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』**")
     input0: Message = await bot.listen(editable.chat.id)
     raw_text = input0.text
     await input0.delete(True)
-    try:
-        arg = int(raw_text)
-    except:
-        arg = 1
-    await editable.edit("**Enter Your Batch Name or send /d for grabing from text filename.**")
+
+    await editable.edit("**Now Please Send Me Your Batch Name**")
     input1: Message = await bot.listen(editable.chat.id)
     raw_text0 = input1.text
     await input1.delete(True)
-    if raw_text0 == '/d':
-        b_name = file_name
-    else:
-        b_name = raw_text0
+    
 
-    await editable.edit("**Enter resolution.\n Eg : `480` or `720` **")
+    await editable.edit("**Enter Resolution 🎞️ : **\n\n**144**\n**240**\n**360**\n**480**\n**720**\n**1080**\n\n**please choose quality**")
     input2: Message = await bot.listen(editable.chat.id)
     raw_text2 = input2.text
     await input2.delete(True)
@@ -385,25 +393,27 @@ async def txt_handler(bot: Client, m: Message):
     except Exception:
             res = "UN"
     
-    await editable.edit("**Enter Your Name or send 'de' for use default.\n Eg : `ᴊᴏʜɴ✰ᴡɪᴄᴋ࿐ 🦋` **")
+    
+
+    await editable.edit("Enter 🌟 Extracted name  or send \n\n 📄 You can also specify a custom name \n\n   『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』 ")
     input3: Message = await bot.listen(editable.chat.id)
     raw_text3 = input3.text
     await input3.delete(True)
-    if raw_text3 == 'de':
-        CR = credit
+    highlighter  = f"️ ⁪⁬⁮⁮⁮"
+    if raw_text3 == 'Robin':
+        MR = highlighter 
     else:
-        CR = raw_text3
-
-    await editable.edit("**Enter Your PW Token For 𝐌𝐏𝐃 𝐔𝐑𝐋  or send /d for use default**")
+        MR = raw_text3
+    await editable.edit("**𝗘𝗻𝘁𝗲𝗿 𝗣𝘄 𝗧𝗼𝗸𝗲𝗻 𝗙𝗼𝗿 𝗣𝘄 𝗨𝗽𝗹𝗼𝗮𝗱𝗶𝗻𝗴 𝗼𝗿 𝗦𝗲𝗻𝗱 `'noo'` 𝗙𝗼𝗿 𝗢𝘁𝗵𝗲𝗿𝘀**")
     input4: Message = await bot.listen(editable.chat.id)
     raw_text4 = input4.text
     await input4.delete(True)
-    if raw_text4 == '/d':
-        MR = raw_text4
+    if raw_text4 == 'noo':
+        MR = token
     else:
         MR = raw_text4
-        
-    await editable.edit("Now send the **Thumb url**\n**Eg :** ``\n\nor Send `no`")
+   
+    await editable.edit("Now Upload a Thumbnail URL 🔗 =  \n Or if don't want thumbnail send = no")
     input6 = message = await bot.listen(editable.chat.id)
     raw_text6 = input6.text
     await input6.delete(True)
@@ -416,7 +426,10 @@ async def txt_handler(bot: Client, m: Message):
     else:
         thumb == "no"
 
-    count =int(raw_text)    
+    if len(links) == 1:
+        count = 1
+    else:
+        count = int(raw_text)   
     try:
         for i in range(arg-1, len(links)):
 
@@ -482,10 +495,8 @@ async def txt_handler(bot: Client, m: Message):
 
             try:  
                 
-                cc = f'**🎞️ VID_ID**: {str(count).zfill(3)}.\n📃 **Title**: {name1} .mkv\n📚 **Batch Name**: {b_name}\n\n📥 **Extracted By :[{CR}](https://t.me/jhon_wick2024)\n**'
-                cc1 = f'**📁 PDF_ID**: {str(count).zfill(3)}.\n📃 **Title**: {name1} .pdf\n📚 **Batch Name**: {b_name}\n\n📥 **Extracted By :[{CR}](https://t.me/jhon_wick2024)\n**'
-                    
-                
+                cc = f'**——— ✦ ** {str(count).zfill(3)}.**——— ✦ ** \n\n** 🎞️ Title :**{𝗻𝗮𝗺𝗲𝟭}\n**├── Extention : @Course_diploma_bot.mkv**\n**├── Resolution : {res}**\n\n**📚 Course** » **{raw_text0}**\n\n**🌟 Extracted By** **{raw_text3}**'
+                cc1 = f'**——— ✦ ** {str(count).zfill(3)}.**——— ✦ **\n\n**📁 Title  :** {𝗻𝗮𝗺𝗲𝟭}\n**├── Extention : @Course_diploma_bot.pdf**\n\n**📚 Course** » **{raw_text0}**\n\n**🌟 Extracted By** **{raw_text3}**'
                 if "drive" in url:
                     try:
                         ka = await helper.download(url, name)
@@ -497,40 +508,7 @@ async def txt_handler(bot: Client, m: Message):
                         await m.reply_text(str(e))
                         time.sleep(e.x)
                         continue
-
-                elif ".pdf" in url:
-                    try:
-                        await asyncio.sleep(4)
-        # Replace spaces with %20 in the URL
-                        url = url.replace(" ", "%20")
- 
-        # Create a cloudscraper session
-                        scraper = cloudscraper.create_scraper()
-
-        # Send a GET request to download the PDF
-                        response = scraper.get(url)
-
-        # Check if the response status is OK
-                        if response.status_code == 200:
-            # Write the PDF content to a file
-                            with open(f'{name}.pdf', 'wb') as file:
-                                file.write(response.content)
-
-            # Send the PDF document
-                            await asyncio.sleep(4)
-                            copy = await bot.send_document(chat_id=m.chat.id, document=f'{name}.pdf', caption=cc1)
-                            count += 1
-
-            # Remove the PDF file after sending
-                            os.remove(f'{name}.pdf')
-                        else:
-                            await m.reply_text(f"Failed to download PDF: {response.status_code} {response.reason}")
-
-                    except FloodWait as e:
-                        await m.reply_text(str(e))
-                        time.sleep(e.x)
-                        continue
-
+                
                 elif ".pdf" in url:
                     try:
                         cmd = f'yt-dlp -o "{name}.pdf" "{url}"'
@@ -542,10 +520,10 @@ async def txt_handler(bot: Client, m: Message):
                     except FloodWait as e:
                         await m.reply_text(str(e))
                         time.sleep(e.x)
-                        continue                       
-                          
+                        continue
                 else:
-                    Show = f"❊⟱ 𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 ⟱❊ »\n\n📄 Title:- `{name}\n\n⌨ 𝐐𝐮𝐥𝐢𝐭𝐲 » {raw_text2}`\n\n**🔗 𝐔𝐑𝐋 »** `{url}`\n\n**𝐁𝐨𝐭 𝐌𝐚𝐝𝐞 𝐁𝐲 ✦ ᴊᴏʜɴ✰ᴡɪᴄᴋ࿐ 🌱"
+                    progress_percent = (count / len(links)) * 100
+                    Show = f"**🚀 𝐏𝐑𝐎𝐆𝐑𝐄𝐒𝐒 = {progress_percent:.2f}%  🚀... »**\n\n**├──🎞️ 📊 Total Links = {len(links)}**\n\n**├──🎞️ ⚡️ Currently On = {str(count).zfill(3)}**\n\n**├──🎞️ 🔥 Remaining Links = {len(links) - count}**\n\n**├──🎞️ 📈 Progress = {progress_percent:.2f}% **\n\n**├──🎞️ Title** {name}\n\n**├── Resolution {raw_text2}**\n\n**├── Url : ** `Time Gya Url Dekhne ka 😅`\n\n**├── Bot Made By : **『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』"
                     prog = await m.reply_text(Show)
                     res_file = await helper.download_video(url, cmd, name)
                     filename = res_file
@@ -556,14 +534,13 @@ async def txt_handler(bot: Client, m: Message):
 
             except Exception as e:
                 await m.reply_text(
-                    f"⌘ 𝐃𝐨𝐰𝐧𝐥𝐨𝐚𝐝𝐢𝐧𝐠 𝐈𝐧𝐭𝐞𝐫𝐮𝐩𝐭𝐞𝐝\n\n⌘ 𝐍𝐚𝐦𝐞 » {name}\n⌘ 𝐋𝐢𝐧𝐤 » {url}"
+                    f"**downloading Interupted **\n{str(e)}\n**Name** » {name}\n**Link** » `{url}`"
                 )
                 continue
 
     except Exception as e:
         await m.reply_text(e)
-    await m.reply_text("✅𝘾𝙊𝙈𝙋𝙇𝙀𝙏𝙀🥳")
+    await m.reply_text("**𝔻ᴏɴᴇ 𝔹ᴏ𝕤𝕤😎**")
+
 
 bot.run()
-if __name__ == "__main__":
-    asyncio.run(main())
