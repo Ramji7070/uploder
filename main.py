@@ -36,7 +36,7 @@ bot = Client(
 my_name = "ᴊᴏʜɴ✰ᴡɪᴄᴋ"
 
 cookies_file_path = os.getenv("COOKIES_FILE_PATH", "youtube_cookies.txt")
-authorized_users = {}
+authorized_users = {5850397219}
 allowed_channels = set()  # Store allowed channel IDs here
 admins = [5850397219]  # Replace with your admin's Telegram user ID
 
@@ -325,7 +325,7 @@ async def upload(bot: Client, m: Message):
         await m.reply_text("Sorry, you are not eligible.")
         return
 
-    editable = await m.reply_text('➠ 𝐒𝐞𝐧𝐝 𝐌𝐞 𝐘𝐨𝐮𝐫 𝐓𝐗𝐓 𝐅𝐢𝐥𝐞 𝐢𝐧 𝐀 𝐏𝐫𝐨𝐩𝐞𝐫 𝐖𝐚𝐲 **\n\n**├── Bot Made By : **『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』**')
+    editable = await m.reply_text('➠ 𝐒𝐞𝐧𝐝 𝐌𝐞 𝐘𝐨𝐮𝐫 𝐓𝐗𝐓 𝐅𝐢𝐥𝐞 𝐢𝐧 𝐀 𝐏𝐫𝐨𝐩𝐞𝐫 𝐖𝐚𝐲 **\n\n**├── Bot Made By : '**『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』**'')
     input: Message = await bot.listen(editable.chat.id)
     x = await input.download()
     await input.delete(True)
@@ -354,6 +354,10 @@ async def upload(bot: Client, m: Message):
     input0: Message = await bot.listen(editable.chat.id)
     raw_text = input0.text
     await input0.delete(True)
+    try:
+        arg = int(raw_text)
+    except:
+        arg = 1
 
     await editable.edit("**Now Please Send Me Your Batch Name**")
     input1: Message = await bot.listen(editable.chat.id)
