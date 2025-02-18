@@ -35,6 +35,142 @@ bot = Client(
 my_name = "ᴊᴏʜɴ✰ᴡɪᴄᴋ"
 
 cookies_file_path = os.getenv("COOKIES_FILE_PATH", "youtube_cookies.txt")
+authorized_users = {}
+allowed_channels = set()  # Store allowed channel IDs here
+admins = [5850397219]  # Replace with your admin's Telegram user ID
+
+help_button_keyboard = InlineKeyboardMarkup(
+    [
+        [InlineKeyboardButton("Help", callback_data="help")],
+    ]
+)
+
+# Function to format the remaining time
+def format_remaining_time(expiration_datetime):
+    remaining_time = expiration_datetime - datetime.now()
+    days, seconds = remaining_time.days, remaining_time.seconds
+    hours = seconds // 3600
+    minutes = (seconds % 3600) // 60
+    return f"{days} Days, {hours} Hours, {minutes} Minutes"
+
+# Function to handle subscription removal
+async def check_subscriptions():
+    while True:
+        current_time = datetime.now()
+        for user_id, details in list(authorized_users.items()):
+            if details["expiration_datetime"] <= current_time:
+                authorized_users.pop(user_id)
+                await bot.send_message(
+                    user_id,
+                    "Your subscription has expired and you have been removed from the authorized users list."
+                )
+        await asyncio.sleep(3600)  # Check every hour
+
+# Define the add_user command handler for admin
+@bot.on_message(filters.command("add_user") & filters.user(admins))
+async def add_user(client: Client, msg: Message):
+    try:
+        parts = msg.text.split()
+        user_id = int(parts[1])
+        subscription_days = int(parts[2])
+        join_datetime = datetime.now()
+        expiration_datetime = join_datetime + timedelta(days=subscription_days)
+        
+        if user_id not in authorized_users:
+            authorized_users[user_id] = {
+                "join_datetime": join_datetime,
+                "subscription_days": subscription_days,
+                "expiration_datetime": expiration_datetime
+            }
+            await client.send_photo(
+                user_id,
+                "IMG_20250218_013652_529.jpg",  # Replace with your offline image path
+                caption=(
+                    f"Congratulations! You have been added to the authorized users list for {subscription_days} days by {msg.from_user.mention}. 🎉\n\n"
+                    f"⏰ Join Datetime : {join_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}\n\n"
+                    f"📅 Subscription Days : {subscription_days} Days \n\n"
+                    f"⏰ Expiration DateTime : {expiration_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}"
+                )
+            )
+            await msg.reply(f"User {user_id} has been added to the authorized users list for {subscription_days} days.")
+        else:
+            await msg.reply(f"User {user_id} is already in the authorized users list.")
+    except (IndexError, ValueError):
+        await msg.reply("Usage: /add_user <user_id> <subscription_days>")
+
+# Define the remove_user command handler for admin
+@bot.on_message(filters.command("remove_user") & filters.user(admins))
+async def remove_user(client: Client, msg: Message):
+    try:
+        user_id = int(msg.text.split()[1])
+        if user_id in authorized_users:
+            authorized_users.pop(user_id)
+            await client.send_message(
+                user_id,
+                f"Sorry, you have been removed from the authorized users list by {msg.from_user.mention}."
+            )
+            await msg.reply(f"User {user_id} has been removed from the authorized users list.")
+        else:
+            await msg.reply(f"User {user_id} is not in the authorized users list.")
+    except (IndexError, ValueError):
+        await msg.reply("Usage: /remove_user <user_id>")
+
+# Define the id command handler to get user or channel ID
+@bot.on_message(filters.command("id"))
+async def get_id(client: Client, msg: Message):
+    if msg.chat.type == "private":
+        await msg.reply(f"Your Telegram ID: {msg.from_user.id}")
+    else:
+        chat_name = msg.chat.title or "Unknown"
+        chat_id = msg.chat.id
+        await msg.reply(f"📃 Your Channel Name: {chat_name}\n"
+                        f"🆔 Your Channel ID: {chat_id}\n\n"
+                        "❌ This Chat ID is not in an Allowed Channel List\n\n"
+                        "To add this Channel, Click to Copy the Below Command\n\n"
+                        f"/add_channel {chat_id}\n\n"
+                        "and send to the bot directly.")
+        
+"""@Client.on_message(filters.command("id"))
+async def get_id(client: Client, msg: Message):
+    if msg.chat.type == "private":
+        await msg.reply(f"Your Telegram ID = {msg.from_user.id}\n\n"
+                        "Send this ID directly to the bot.")
+    elif msg.chat.type in ["group", "supergroup", "channel"]:
+        chat_name = msg.chat.title or "Unknown"
+        chat_id = msg.chat.id
+        await msg.reply(f"📃 Your Channel Name: {chat_name}\n"
+                        f"🆔 Your Channel ID: {chat_id}\n\n"
+                        "❌ This Chat ID is not in an Allowed Channel List\n\n"
+                        "To add this Channel, Click to Copy the Below Command\n\n"
+                        f"/add_channel {chat_id}\n\n"
+                        "and send to the bot directly.")"""
+
+# Define the add_channel command handler for admin
+@bot.on_message(filters.command("add_channel") & filters.user(admins))
+async def add_channel(client: Client, msg: Message):
+    try:
+        chat_id = int(msg.text.split()[1])
+        allowed_channels.add(chat_id)
+        await msg.reply(f"Channel ID {chat_id} has been added to the allowed channels list.")
+    except (IndexError, ValueError):
+        await msg.reply("Usage: /add_channel <channel_id>")
+
+# Define the remove_channel command handler for admin
+@bot.on_message(filters.command("remove_channel") & filters.user(admins))
+async def remove_channel(client: Client, msg: Message):
+    try:
+        chat_id = int(msg.text.split()[1])
+        if chat_id in allowed_channels:
+            allowed_channels.remove(chat_id)
+            await msg.reply(f"Channel ID {chat_id} has been removed from the allowed channels list.")
+        else:
+            await msg.reply(f"Channel ID {chat_id} is not in the allowed channels list.")
+    except (IndexError, ValueError):
+        await msg.reply("Usage: /remove_channel <channel_id>")
+
+# Start the bot
+async def main():
+    await check_subscriptions()
 
 # Define aiohttp routes
 routes = web.RouteTableDef()
@@ -143,12 +279,46 @@ async def start(client: Client, msg: Message):
         "Progress: [🟨🟨🟨🟨🟨🟨🟨⬜⬜] 75%\n\n"
     )
 
+   
     await asyncio.sleep(1)
-    await start_message.edit_text(
-        Data.START.format(msg.from_user.mention) +
-        "Checking status Ok... Command Nhi Bataunga **Bot Made BY [༺𝙅𝙊𝙃𝙉 𝙒𝙄𝘾𝙆༻](https://t.me/jhon_wick001) \n\n"
-        "Progress:[🟩🟩🟩🟩🟩🟩🟩🟩🟩] 100%\n\n"
-    )
+    if msg.from_user.id in authorized_users:
+        details = authorized_users[msg.from_user.id]
+        join_datetime = details["join_datetime"]
+        subscription_days = details["subscription_days"]
+        expiration_datetime = details["expiration_datetime"]
+        remaining_time = format_remaining_time(expiration_datetime)
+
+        offline_image_path = "IMG_20250218_013652_529.jpg"  # Replace with your offline image path
+        await client.send_photo(
+            msg.chat.id,
+            offline_image_path,
+            caption=(
+                f"Great! You are a 𝗣𝗥𝗘𝗠𝗜𝗨𝗠 member!\n\n  🌟 Welcome {msg.from_user.mention} ! 👋\n\n"
+                f"⏰ Join Datetime : {join_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}\n\n"
+                f"📅 Subscription Days : {subscription_days} Days \n\n"
+                f"⏰ Expiration DateTime : {expiration_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}\n\n"
+                f"⌛️Remaining Time : {remaining_time}\n\n"
+                "I Am A Bot For Download Links From Your **🌟.TXT 🌟** File And Then Upload That File On Telegram."
+                " So Basically If You Want To Use Me First Send Me /drm Command And Then Follow Few Steps..\n\n"
+                "**├── Bot Made By : **『 🅹🅰️🅸 🆂🅷🆁🅸 🆁🅰️🅼 ⚡️ 🧑‍💻』**\n\n"
+                "Use /stop to stop any ongoing task."
+            ),
+            reply_markup=help_button_keyboard
+        )
+    else:
+        offline_image_path = "IMG_20250218_015150_501.jpg"  # Replace with your offline image path
+        await client.send_photo(
+            msg.chat.id,
+            offline_image_path,
+            caption=(
+                f"  🌟 Welcome {msg.from_user.mention} ! 👋\n\n"
+                "You are currently using the 𝗙𝗥𝗘𝗘 version. 🆓\n\n"
+                "I'm here to make your life easier by downloading videos from your **.txt** file 📄 and uploading them directly to Telegram!\n\n"
+                "Want to get started? Your id\n\n"
+                "💬 Contact @Course_diploma_bot to get the 𝗦𝗨𝗕𝗦𝗖𝗥𝗜𝗣𝗧𝗜𝗢𝗡 🎫 and unlock the full potential of your new bot! 🔓"
+            )
+        )
+
 
 @bot.on_message(filters.command(["stop"]) )
 async def restart_handler(_, m):
