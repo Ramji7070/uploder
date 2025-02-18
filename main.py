@@ -8,7 +8,7 @@ import requests
 import subprocess
 import urllib.parse
 import yt_dlp
-import cloudscraper
+
 import m3u8
 import core as helper
 from utils import progress_bar
