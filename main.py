@@ -17,6 +17,7 @@ from subprocess import getstatusoutput
 from pytube import YouTube
 from aiohttp import web
 
+from datetime import datetime, timedelta
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.errors import FloodWait
@@ -87,9 +88,9 @@ async def add_user(client: Client, msg: Message):
                 "IMG_20250218_013652_529.jpg",  # Replace with your offline image path
                 caption=(
                     f"Congratulations! You have been added to the authorized users list for {subscription_days} days by {msg.from_user.mention}. 🎉\n\n"
-                    f"⏰ Join Datetime : {join_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}\n\n"
-                    f"📅 Subscription Days : {subscription_days} Days \n\n"
-                    f"⏰ Expiration DateTime : {expiration_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}"
+                    f"⏰ Join Datetime: {join_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}\n\n"
+                    f"📅 Subscription Days: {subscription_days} Days\n\n"
+                    f"⏰ Expiration DateTime: {expiration_datetime.strftime('%d-%m-%Y %I:%M:%S %p')}"
                 )
             )
             await msg.reply(f"User {user_id} has been added to the authorized users list for {subscription_days} days.")
@@ -129,21 +130,6 @@ async def get_id(client: Client, msg: Message):
                         "To add this Channel, Click to Copy the Below Command\n\n"
                         f"/add_channel {chat_id}\n\n"
                         "and send to the bot directly.")
-        
-"""@Client.on_message(filters.command("id"))
-async def get_id(client: Client, msg: Message):
-    if msg.chat.type == "private":
-        await msg.reply(f"Your Telegram ID = {msg.from_user.id}\n\n"
-                        "Send this ID directly to the bot.")
-    elif msg.chat.type in ["group", "supergroup", "channel"]:
-        chat_name = msg.chat.title or "Unknown"
-        chat_id = msg.chat.id
-        await msg.reply(f"📃 Your Channel Name: {chat_name}\n"
-                        f"🆔 Your Channel ID: {chat_id}\n\n"
-                        "❌ This Chat ID is not in an Allowed Channel List\n\n"
-                        "To add this Channel, Click to Copy the Below Command\n\n"
-                        f"/add_channel {chat_id}\n\n"
-                        "and send to the bot directly.")"""
 
 # Define the add_channel command handler for admin
 @bot.on_message(filters.command("add_channel") & filters.user(admins))
@@ -170,7 +156,11 @@ async def remove_channel(client: Client, msg: Message):
 
 # Start the bot
 async def main():
-    await check_subscriptions()
+    async with bot:
+        await bot.start()
+        asyncio.create_task(check_subscriptions())
+        
+
 
 # Define aiohttp routes
 routes = web.RouteTableDef()
