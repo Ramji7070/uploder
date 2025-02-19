@@ -180,9 +180,7 @@ async def main():
         asyncio.create_task(check_subscriptions())
         await bot.idle()
 
-if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+
 
         
 
