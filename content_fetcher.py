@@ -1,4 +1,5 @@
-import requests
+import aiohttp
+import asyncio
 import sys
 import os
 from datetime import datetime
@@ -24,15 +25,15 @@ def set_token(token):
     folder_base_url = f'https://api.classplusapp.com/v2/course/preview/content/list/{token}?limit=1000&offset=0'
 
 # Function to get folder name and IDs
-def get_folders(folder_id=None):
+async def get_folders(session, folder_id=None):
     try:
         url = folder_base_url if folder_id is None else f'{folder_base_url}&folderId={folder_id}'
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an HTTPError for bad responses
-        folder_data = response.json()
-        folder_list = folder_data.get('data', [])
-        return {folder['id']: folder['name'] for folder in folder_list}
-    except requests.exceptions.HTTPError as http_err:
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()
+            folder_data = await response.json()
+            folder_list = folder_data.get('data', [])
+            return {folder['id']: folder['name'] for folder in folder_list}
+    except aiohttp.ClientResponseError as http_err:
         print(f"HTTP error occurred while fetching folders: {http_err}")
     except ValueError as json_err:
         print(f"JSON Decode Error while fetching folders: {json_err}")
@@ -41,13 +42,13 @@ def get_folders(folder_id=None):
     return {}
 
 # Function to get course content for a specific folder
-def get_course_content(folder_id):
+async def get_course_content(session, folder_id):
     try:
         url = f'{base_url}&folderId={folder_id}'
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()  # Raises an HTTPError for bad responses
-        return response.json()
-    except requests.exceptions.HTTPError as http_err:
+        async with session.get(url, headers=headers) as response:
+            response.raise_for_status()
+            return await response.json()
+    except aiohttp.ClientResponseError as http_err:
         print(f"HTTP error occurred: {http_err}")
     except ValueError as json_err:
         print(f"JSON Decode Error: {json_err}")
@@ -111,8 +112,8 @@ def filter_content(content, folder_path):
     return filtered_content
 
 # Recursive function to fetch and print content for all folders
-def process_folder(folder_id, folder_path, file, indent=0):
-    content = get_course_content(folder_id)
+async def process_folder(session, folder_id, folder_path, file, indent=0):
+    content = await get_course_content(session, folder_id)
     if content:
         filtered_content = filter_content(content, folder_path)
         if filtered_content:
@@ -126,26 +127,30 @@ def process_folder(folder_id, folder_path, file, indent=0):
         print(output.strip())
         file.write(output)
 
-    subfolders = get_folders(folder_id)
-    for subfolder_id, subfolder_name in subfolders.items():
-        process_folder(subfolder_id, folder_path + " " + subfolder_name, file, indent + 2)
+    subfolders = await get_folders(session, folder_id)
+    tasks = [
+        process_folder(session, subfolder_id, folder_path + " " + subfolder_name, file, indent + 2)
+        for subfolder_id, subfolder_name in subfolders.items()
+    ]
+    await asyncio.gather(*tasks)
 
-def generate_content_file(msg):
-    # Fetch top-level folders and their names
-    folders = get_folders()
+async def generate_content_file(msg):
+    async with aiohttp.ClientSession() as session:
+        folders = await get_folders(session)
 
-    # Save the output into a single text file named after each batch
-    file_name = "batch_content.txt"
-    with open(file_name, 'w', encoding='utf-8') as file:
-        for folder_id, folder_name in folders.items():
-            process_folder(folder_id, folder_name, file)
+        file_name = "batch_content.txt"
+        with open(file_name, 'w', encoding='utf-8') as file:
+            tasks = [
+                process_folder(session, folder_id, folder_name, file)
+                for folder_id, folder_name in folders.items()
+            ]
+            await asyncio.gather(*tasks)
 
-    # Rename the file with a timestamp to avoid overwriting previous batches
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    new_file_name = f"batch_content_{timestamp}.txt"
-    os.rename(file_name, new_file_name)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        new_file_name = f"batch_content_{timestamp}.txt"
+        os.rename(file_name, new_file_name)
 
-    if os.path.getsize(new_file_name) > 0:
-        return new_file_name
-    else:
-        return None
+        if os.path.getsize(new_file_name) > 0:
+            return new_file_name
+        else:
+            return None
