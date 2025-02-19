@@ -83,9 +83,14 @@ async def set_token_command(client: Client, msg: Message):
         token = token_msg.text
         logging.info(f"Token received: {token}")
         set_token(token)
+
+        await token_msg.reply("Token received. Your work is in process...")
+
+        # Remove token listener immediately after receiving the token
+        bot.remove_handler(token_listener)
         
         # Generate content file
-        new_file_name = generate_content_file(token_msg)
+        new_file_name = await generate_content_file(token_msg)
 
         async def send_document(client, msg):
             if new_file_name and os.path.getsize(new_file_name) > 0:
@@ -97,7 +102,11 @@ async def set_token_command(client: Client, msg: Message):
         # Call send_document function asynchronously
         await send_document(client, token_msg)
 
-        bot.remove_handler(token_listener)
+@bot.on_message(filters.command("set_token") & ~filters.user(admins))
+async def unauthorized_command(client: Client, msg: Message):
+    await msg.reply("You are not authorized to run this command. Sorry!")
+
+
 
 
  # Check every hour
