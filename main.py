@@ -36,7 +36,7 @@ bot = Client(
 my_name = "ᴊᴏʜɴ✰ᴡɪᴄᴋ"
 
 cookies_file_path = os.getenv("COOKIES_FILE_PATH", "youtube_cookies.txt")
-authorized_users = {5850397219}
+authorized_users = {}
 allowed_channels = set()  # Store allowed channel IDs here
 admins = [5850397219]  # Replace with your admin's Telegram user ID
 
@@ -98,6 +98,8 @@ async def add_user(client: Client, msg: Message):
             await msg.reply(f"User {user_id} is already in the authorized users list.")
     except (IndexError, ValueError):
         await msg.reply("Usage: /add_user <user_id> <subscription_days>")
+    except Exception as e:
+        await msg.reply(f"An error occurred: {e}")
 
 # Define the remove_user command handler for admin
 @bot.on_message(filters.command("remove_user") & filters.user(admins))
@@ -115,6 +117,8 @@ async def remove_user(client: Client, msg: Message):
             await msg.reply(f"User {user_id} is not in the authorized users list.")
     except (IndexError, ValueError):
         await msg.reply("Usage: /remove_user <user_id>")
+    except Exception as e:
+        await msg.reply(f"An error occurred: {e}")
 
 # Define the id command handler to get user or channel ID
 @bot.on_message(filters.command("id"))
@@ -135,17 +139,30 @@ async def get_id(client: Client, msg: Message):
 @bot.on_message(filters.command("add_channel") & filters.user(admins))
 async def add_channel(client: Client, msg: Message):
     try:
-        chat_id = int(msg.text.split()[1])
-        allowed_channels.add(chat_id)
-        await msg.reply(f"Channel ID {chat_id} has been added to the allowed channels list.")
+        parts = msg.text.split()
+        if len(parts) != 2:
+            await msg.reply("Usage: /add_channel <channel_id>")
+            return
+        chat_id = int(parts[1])
+        if chat_id not in allowed_channels:
+            allowed_channels.add(chat_id)
+            await msg.reply(f"Channel ID {chat_id} has been added to the allowed channels list.")
+        else:
+            await msg.reply(f"Channel ID {chat_id} is already in the allowed channels list.")
     except (IndexError, ValueError):
         await msg.reply("Usage: /add_channel <channel_id>")
+    except Exception as e:
+        await msg.reply(f"An error occurred: {e}")
 
 # Define the remove_channel command handler for admin
 @bot.on_message(filters.command("remove_channel") & filters.user(admins))
 async def remove_channel(client: Client, msg: Message):
     try:
-        chat_id = int(msg.text.split()[1])
+        parts = msg.text.split()
+        if len(parts) != 2:
+            await msg.reply("Usage: /remove_channel <channel_id>")
+            return
+        chat_id = int(parts[1])
         if chat_id in allowed_channels:
             allowed_channels.remove(chat_id)
             await msg.reply(f"Channel ID {chat_id} has been removed from the allowed channels list.")
@@ -153,12 +170,20 @@ async def remove_channel(client: Client, msg: Message):
             await msg.reply(f"Channel ID {chat_id} is not in the allowed channels list.")
     except (IndexError, ValueError):
         await msg.reply("Usage: /remove_channel <channel_id>")
+    except Exception as e:
+        await msg.reply(f"An error occurred: {e}")
 
 # Start the bot
 async def main():
     async with bot:
         await bot.start()
         asyncio.create_task(check_subscriptions())
+        await bot.idle()
+
+if __name__ == '__main__':
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
+
         
 
 
