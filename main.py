@@ -16,7 +16,7 @@ from pyromod import listen
 from subprocess import getstatusoutput
 from pytube import YouTube
 from aiohttp import web
-
+import logging  # Importing the logging module
 from datetime import datetime, timedelta
 from pyrogram import Client, filters
 from pyrogram.types import Message
@@ -24,6 +24,12 @@ from pyrogram.errors import FloodWait
 from pyrogram.errors.exceptions.bad_request_400 import StickerEmojiInvalid
 from pyrogram.types.messages_and_media import message
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+# Import functions from content_fetcher
+from content_fetcher import set_token, generate_content_file
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
 
 # Initialize the bot
 bot = Client(
@@ -66,6 +72,35 @@ async def check_subscriptions():
                     "Your subscription has expired and you have been removed from the authorized users list."
                 )
         await asyncio.sleep(3600)  # Check every hour
+
+@bot.on_message(filters.command("set_token") & filters.user(admins))
+async def set_token_command(client: Client, msg: Message):
+    logging.info("set_token command received")
+    await msg.reply("Please send the token.")
+
+    @bot.on_message(filters.user(admins))
+    async def token_listener(client: Client, token_msg: Message):
+        token = token_msg.text
+        logging.info(f"Token received: {token}")
+        set_token(token)
+        
+        # Generate content file
+        new_file_name = generate_content_file(token_msg)
+
+        async def send_document(client, msg):
+            if new_file_name and os.path.getsize(new_file_name) > 0:
+                await client.send_document(msg.chat.id, new_file_name)
+                os.remove(new_file_name)
+            else:
+                await msg.reply("The generated file is empty. Please check if the content is available.")
+
+        # Call send_document function asynchronously
+        await send_document(client, token_msg)
+
+        bot.remove_handler(token_listener)
+
+
+ # Check every hour
 
 # Define the add_user command handler for admin
 @bot.on_message(filters.command("add_user") & filters.user(admins))
