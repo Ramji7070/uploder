@@ -129,7 +129,7 @@ async def process_folder(session, folder_id, folder_path, file, indent=0):
 
     subfolders = await get_folders(session, folder_id)
     tasks = [
-        process_folder(session, subfolder_id, folder_path + " " + subfolder_name, file, indent + 2)
+        process_folder(session, subfolder_id, f"{folder_path} / {subfolder_name}", file, indent + 2)
         for subfolder_id, subfolder_name in subfolders.items()
     ]
     await asyncio.gather(*tasks)
