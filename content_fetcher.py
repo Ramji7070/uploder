@@ -91,18 +91,18 @@ def filter_content(content, folder_path):
                     elif '4b06bf8d61c41f8310af9b2624459378203740932b456b07fcf817b737fbae27' in thumbnailurl:
                         new_url_parts = thumbnailurl.split('/')
                         if len(new_url_parts) > 1:
-                            new_url = f'https://media-cdn-a.classplusapp.com/mig-01/b08bad9ff8d969639b2e43d5769342cc62b510c4345d2f7f153bec53be84fe35/{new_url_parts[-1]}/{new_url_parts[-1]}.m3u8'
+                            new_url = f'https://media-cdn.classplusapp.com/alisg-cdn-a.classplusapp.com/b08bad9ff8d969639b2e43d5769342cc62b510c4345d2f7f153bec53be84fe35/{new_url_parts[-1]}.m3u8'
                             new_url = new_url.replace('.jpeg', '')
                             thumbnailurl = new_url
                     elif 'pdf' in thumbnailurl:
                         thumbnailurl = thumbnailurl
                     elif '/1d' in thumbnailurl:
-                        thumbnailurl = 'URL not available'
+                        thumbnailurl = '============================== LINK NOT FOUND ============================== '
                     elif 'media-cdn.classplusapp.com' in thumbnailurl and 'thumbnail.png' in thumbnailurl and 'cc' in thumbnailurl and 'lc' in thumbnailurl:
                         new_url = thumbnailurl.replace('thumbnail.png', 'master.m3u8')
                         thumbnailurl = new_url
                     elif 'cdn-wl-assets.classplus.co/production/single' in thumbnailurl:
-                        thumbnailurl = 'URL not available'
+                        thumbnailurl = '============================== LINK NOT FOUND ============================== '
                     elif 'cc' in thumbnailurl or 'lc' in thumbnailurl:
                         # Add new condition for 'cc' and 'lc' in thumbnailurl
                         new_url = thumbnailurl.replace('thumbnail.png', 'master.m3u8')
